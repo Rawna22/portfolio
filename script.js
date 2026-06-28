@@ -1,21 +1,32 @@
-// Mobile menu toggle
-const menuBtn = document.getElementById('menuBtn');
-const sidebar = document.getElementById('sidebar');
+// ===== NAV TOGGLE =====
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
 
-menuBtn.addEventListener('click', () => {
-  sidebar.classList.toggle('open');
+navToggle.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
 });
 
-// Close sidebar on mobile link click
-sidebar.querySelectorAll('a').forEach(link => {
+// Close mobile menu on link click
+navLinks.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => {
-    if (window.innerWidth <= 768) sidebar.classList.remove('open');
+    navLinks.classList.remove('open');
   });
 });
 
-// Active nav on scroll
+// ===== NAV SCROLL EFFECT =====
+const nav = document.getElementById('nav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  if (y > 50) {
+    nav.style.borderBottomColor = 'var(--border)';
+  }
+  lastScroll = y;
+}, { passive: true });
+
+// ===== ACTIVE NAV LINK =====
 const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.sidebar-nav a');
+const navAnchors = navLinks.querySelectorAll('a');
 
 window.addEventListener('scroll', () => {
   let current = '';
@@ -24,41 +35,78 @@ window.addEventListener('scroll', () => {
       current = section.getAttribute('id');
     }
   });
-  navLinks.forEach(a => {
-    a.classList.remove('active');
-    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  navAnchors.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
   });
-});
+}, { passive: true });
 
-// Smooth scroll
+// ===== SMOOTH SCROLL =====
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
     e.preventDefault();
     const target = document.querySelector(this.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 });
 
-// Scroll reveal
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
+// ===== SCROLL REVEAL =====
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, i * 60);
+      revealObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.1 });
 
-document.querySelectorAll('.portfolio-item, .stat, .skill-tag').forEach((el, i) => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = `opacity 0.5s ease ${i * 0.05}s, transform 0.5s ease ${i * 0.05}s`;
-  observer.observe(el);
+document.querySelectorAll('.project-card, .about-card, .skill-group, .contact-card').forEach(el => {
+  el.classList.add('reveal');
+  revealObserver.observe(el);
 });
 
-// Form
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  alert('Message ready! (backend not connected)');
-  this.reset();
-});
+// ===== FORM =====
+const form = document.getElementById('contactForm');
+const submitBtn = document.getElementById('submitBtn');
+const formSuccess = document.getElementById('formSuccess');
+
+if (form) {
+  form.addEventListener('submit', function(e) {
+    // If using Formspree, let it submit normally
+    if (form.action && form.action.includes('formspree')) {
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+      // Form will submit, show success on return
+      return;
+    }
+
+    // Fallback: show success message
+    e.preventDefault();
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      form.reset();
+      submitBtn.textContent = 'Send Message →';
+      submitBtn.disabled = false;
+      formSuccess.classList.add('show');
+      setTimeout(() => formSuccess.classList.remove('show'), 5000);
+    }, 1000);
+  });
+}
+
+// ===== TYPING EFFECT (Hero subtitle) =====
+const heroSub = document.querySelector('.hero-sub');
+if (heroSub) {
+  // Subtle entrance
+  heroSub.style.opacity = '0';
+  heroSub.style.transform = 'translateY(10px)';
+  heroSub.style.transition = 'opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s';
+  setTimeout(() => {
+    heroSub.style.opacity = '1';
+    heroSub.style.transform = 'translateY(0)';
+  }, 300);
+}
